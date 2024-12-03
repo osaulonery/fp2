@@ -1,10 +1,14 @@
 require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
-const { createKey, createKeyAndSendEmail, activateKey } = require("./controller");
+const {
+  createKey,
+  createKeyAndSendEmail,
+  activateKey,
+} = require("./controller");
 
 const app = express();
-const PORT = 3211 || process.env.PORT;
+const PORT = process.env.PORT || 3211;
 app.use(bodyParser.json());
 
 app.post("/createKey", createKey);
