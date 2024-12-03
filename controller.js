@@ -58,8 +58,8 @@ const createKeyAndSendEmail = async (req, res) => {
     // Enviar email com a chave
     const emailResult = await sendEmail(
       email,
-      "Sua chave de ativação",
-      `A equipe forPOE agradece, aqui está sua chave de ativação: ${createdKey.id}! GL!`
+      "Your activation key",
+      `forPOE thanks you, here is your activation key: ${createdKey.id}! GL!`
     );
 
     if (!emailResult.success) {
@@ -85,7 +85,7 @@ const activateKey = async (req, res) => {
     const { key } = req.body;
 
     if (!key) {
-      return res.status(400).json({ error: "Chave não fornecida." });
+      return res.status(400).json({ error: "Key not provided." });
     }
 
     // Verifica se a chave existe no banco de dados
@@ -96,36 +96,62 @@ const activateKey = async (req, res) => {
       .single();
 
     if (fetchError) {
-      return res.status(404).json({ error: "Chave não encontrada." });
+      return res.status(404).json({ error: "Key not found." });
     }
 
     // Verifica se a chave já está ativa
     if (keyData.status === "ATIVA") {
-      return res.status(400).json({ error: "Chave já foi ativada." });
+      return res.status(400).json({ error: "Key already activated." });
     }
-
-    // Atualiza o status da chave para "ATIVA" e define a data de expiração (1 mês a partir da ativação)
-    const currentDate = new Date();
-    const expirationDate = new Date();
-    expirationDate.setMonth(currentDate.getMonth() + 1);
 
     const { error: updateError } = await db
       .from("keys")
       .update({
         status: "ATIVA",
-        expiration: expirationDate.toISOString(),
       })
       .eq("id", key);
 
     if (updateError) {
-      return res.status(500).json({ error: "Erro ao ativar a chave." });
+      return res.status(500).json({ error: "Error activating the key." });
     }
 
-    return res.status(200).json({ message: "Chave ativada com sucesso." });
+    return res.status(200).json({ message: "Key activated successfully." });
   } catch (error) {
     console.error("Erro no activateKey:", error);
-    return res.status(500).json({ error: "Erro interno do servidor." });
+    return res.status(500).json({ error: "Unknown key status." });
   }
 };
 
-module.exports = { createKey, createKeyAndSendEmail, activateKey };
+const verifyKey = async (req, res) => {
+  try {
+    const { key } = req.query;
+
+    if (!key) {
+      return res.status(400).json({ error: "Insert a key." });
+    }
+
+    // Verifica se a chave existe no banco de dados
+    const { data: keyData, error: fetchError } = await db
+      .from("keys")
+      .select("status")
+      .eq("id", key)
+      .single();
+
+    if (fetchError) {
+      return res.status(404).json({ error: "Key not found." });
+    }
+
+    if (keyData.status === "ATIVA") {
+      return res.status(200).json({ valid: true });
+    } else if (keyData.status === "INATIVA") {
+      return res.status(200).json({ valid: false });
+    } else {
+      return res.status(400).json({ error: "Unknown key status." });
+    }
+  } catch (error) {
+    console.error("Error on Key:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+module.exports = { createKey, createKeyAndSendEmail, activateKey, verifyKey };

@@ -5,6 +5,7 @@ const {
   createKey,
   createKeyAndSendEmail,
   activateKey,
+  verifyKey,
 } = require("./controller");
 
 const app = express();
@@ -16,6 +17,8 @@ app.post("/createKey", createKey);
 app.post("/createKeyAndSendEmail", createKeyAndSendEmail);
 
 app.post("/activateKey", activateKey);
+
+app.get("/verifyKey", verifyKey);
 
 app.listen(PORT, () => {
   console.log("Server running on port ", PORT);
