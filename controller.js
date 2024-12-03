@@ -91,7 +91,7 @@ const activateKey = async (req, res) => {
     // Verifica se a chave existe no banco de dados
     const { data: keyData, error: fetchError } = await db
       .from("keys")
-      .select("id, status")
+      .select("id, status, expiration")
       .eq("id", key)
       .single();
 
@@ -102,6 +102,14 @@ const activateKey = async (req, res) => {
     // Verifica se a chave já está ativa
     if (keyData.status === "ATIVA") {
       return res.status(400).json({ error: "Key already activated." });
+    }
+
+    const currentDate = new Date();
+    const expirationDate = new Date(keyData.expiration);
+
+    // Verifica se a data atual é maior que a data de expiração
+    if (currentDate > expirationDate) {
+      return res.status(400).json({ error: "Key already activated before. Buy another one bro. Dont be cheap. Love u." });
     }
 
     const { error: updateError } = await db
