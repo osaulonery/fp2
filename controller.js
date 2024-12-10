@@ -174,12 +174,7 @@ const getPointers = async (req, res) => {
       return res.status(404).json({ error: "Error fetching pointers." });
     }
 
-    const formattedPointers = pointers.map((pointer) => ({
-      base_address_offset: pointer.base_address_offset,
-      offset_list: pointer.offset_list.replace(/\"/g, ""),
-    }));
-
-    return res.status(200).json(formattedPointers);
+    return res.status(200).json(pointers);
   } catch (error) {
     console.error("Error on Key:", error);
     return res.status(500).json({ error: "Internal server error." });
