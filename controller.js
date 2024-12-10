@@ -5,7 +5,6 @@ const createKey = async (req, res) => {
   try {
     const { email } = req.body;
 
-    // Valida se o e-mail foi enviado no body {"email": "saulonery@ymail.com"}
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
@@ -109,7 +108,10 @@ const activateKey = async (req, res) => {
 
     // Verifica se a data atual é maior que a data de expiração
     if (currentDate > expirationDate) {
-      return res.status(400).json({ error: "Key already activated before. Buy another one bro. Dont be cheap. Love u." });
+      return res.status(400).json({
+        error:
+          "Key already activated before. Buy another one bro. Dont be cheap. Love u.",
+      });
     }
 
     const { error: updateError } = await db
@@ -138,7 +140,6 @@ const verifyKey = async (req, res) => {
       return res.status(400).json({ error: "Insert a key." });
     }
 
-    // Verifica se a chave existe no banco de dados
     const { data: keyData, error: fetchError } = await db
       .from("keys")
       .select("status")
@@ -162,4 +163,33 @@ const verifyKey = async (req, res) => {
   }
 };
 
-module.exports = { createKey, createKeyAndSendEmail, activateKey, verifyKey };
+const getPointers = async (req, res) => {
+  try {
+    const { data: pointers, error: fetchError } = await db
+      .from("pointers")
+      .select("base_address_offset, offset_list");
+
+    if (fetchError) {
+      console.error("Error fetching pointers:", fetchError);
+      return res.status(404).json({ error: "Error fetching pointers." });
+    }
+
+    const formattedPointers = pointers.map((pointer) => ({
+      base_address_offset: pointer.base_address_offset,
+      offset_list: pointer.offset_list.replace(/\"/g, ""),
+    }));
+
+    return res.status(200).json(formattedPointers);
+  } catch (error) {
+    console.error("Error on Key:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+module.exports = {
+  createKey,
+  createKeyAndSendEmail,
+  activateKey,
+  verifyKey,
+  getPointers,
+};
